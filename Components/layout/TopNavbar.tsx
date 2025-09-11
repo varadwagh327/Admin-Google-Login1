@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSelector, useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
@@ -22,6 +22,14 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
   const userName = user?.name || user?.email || "Guest";
   const userInitial = userName[0].toUpperCase();
 
+  const [useremail, setuseremail] = useState<string | null>(null);
+
+  useEffect(() => {
+    // This only runs in the browser
+    const stored = localStorage.getItem("user");
+    setuseremail(stored);
+  }, []);
+
   const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     console.log("Searching for:", searchTerm); // replace with actual search logic
@@ -33,34 +41,56 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-slate-200 shadow-sm px-4 md:px-6 py-2 md:py-3 flex items-center justify-between gap-3 md:gap-4">
-      
+    <header
+      className="
+        sticky top-0 z-50 
+        bg-white/95 backdrop-blur border-b border-slate-200 shadow-sm
+        flex items-center justify-between
+        px-4 md:px-6 py-2 md:py-3
+        w-full md:ml-64  /* 👈 shift for sidebar on desktop */
+      "
+    >
       {/* Left side: Sidebar toggle + Welcome */}
-      <div className="flex items-center gap-3 flex-1 min-w-0">
+      <div className="flex items-center gap-3 flex-shrink min-w-0">
         {onMenuClick && (
           <button
             onClick={onMenuClick}
             className="p-2 rounded-md hover:bg-slate-100 md:hidden"
             aria-label="Open menu"
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 6h16M4 12h16M4 18h16"
+              />
             </svg>
           </button>
         )}
-        <div className="min-w-0">
+        <div className="truncate">
           <h1 className="text-base md:text-xl font-semibold text-slate-900 truncate">
-            Welcome, {userName} 👋
+            Welcome, {useremail} 👋
           </h1>
-          <p className="text-xs md:text-sm text-slate-500 truncate">Role: {user?.role || "Admin"}</p>
+          <p className="text-xs md:text-sm text-slate-500 truncate">
+            Role: {user?.role || "Admin"}
+          </p>
         </div>
       </div>
 
       {/* Middle: Search bar (desktop only) */}
-      <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-md mx-4">
+      <form
+        onSubmit={handleSearch}
+        className="hidden md:flex flex-1 max-w-md mx-4"
+      >
         <input
           type="text"
-          placeholder="Search..."
+          placeholder={`${useremail}`}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="w-full rounded-l-lg border border-r-0 px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500"
@@ -74,7 +104,7 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
       </form>
 
       {/* Right side: Profile + Logout */}
-      <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0 relative">
+      <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0 relative max-w-[150px] md:max-w-none">
         {/* Mobile search toggle */}
         <button
           className="md:hidden p-2 rounded-md hover:bg-slate-100"
@@ -96,13 +126,12 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
           {/* Dropdown menu */}
           {dropdownOpen && (
             <div className="absolute right-0 mt-2 w-40 bg-white border border-slate-200 rounded-md shadow-lg py-2 z-50">
-              <Link href="/profile">
-                <a
-                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50"
-                  onClick={() => setDropdownOpen(false)}
-                >
-                  Profile
-                </a>
+              <Link
+                href="/profile"
+                className="block px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50"
+                onClick={() => setDropdownOpen(false)}
+              >
+                Profile
               </Link>
               <button
                 onClick={handleLogout}

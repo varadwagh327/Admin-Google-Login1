@@ -2,8 +2,7 @@
 
 import React, { useMemo } from "react";
 import { motion } from "framer-motion";
-import { HiOutlineUsers, HiOutlineChartBar, HiOutlineShoppingCart, HiOutlineCog, HiOutlineBell, HiOutlineHome, HiOutlineLogout } from "react-icons/hi";
-import Image from "next/image";
+import { HiOutlineUsers, HiOutlineChartBar, HiOutlineShoppingCart } from "react-icons/hi";
 
 /* -------------------------
    Mock Data

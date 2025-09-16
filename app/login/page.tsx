@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { FcGoogle } from "react-icons/fc";
+import { FaFacebook } from "react-icons/fa"; // ✅ Facebook icon
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { useDispatch } from "react-redux";
@@ -26,6 +27,7 @@ declare global {
       };
     };
     handleCredentialResponse?: (response: { credential: string }) => void;
+    FB?: any; // ✅ Add Facebook SDK global
   }
 }
 
@@ -36,7 +38,7 @@ export default function LoginPage(): React.JSX.Element {
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
 
-  // Google login setup
+  // ✅ GOOGLE LOGIN (already working)
   useEffect(() => {
     window.handleCredentialResponse = async (response: { credential: string }) => {
       try {
@@ -48,12 +50,7 @@ export default function LoginPage(): React.JSX.Element {
 
         const data = await res.json();
         if (data?.token && data?.user) {
-          dispatch(
-            login({
-              user: data.user.email, // backend should return { user: { email, name } }
-              token: data.token,
-            })
-          );
+          dispatch(login({ user: data.user.email, token: data.token }));
           router.push("/HomePage");
         } else {
           console.error("Google login failed", data);
@@ -79,7 +76,7 @@ export default function LoginPage(): React.JSX.Element {
     function initGSI() {
       const clientId =
         process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ??
-        "920952709114-4oqpubk25650h2vcoc9mh9s9cke419fu.apps.googleusercontent.com";
+        "default-google-client-id";
 
       if (window.google?.accounts?.id?.initialize && window.google?.accounts?.id?.renderButton) {
         window.google.accounts.id.initialize({
@@ -101,7 +98,57 @@ export default function LoginPage(): React.JSX.Element {
     };
   }, [router, dispatch]);
 
-  // Email/password login
+  // ✅ FACEBOOK LOGIN
+  useEffect(() => {
+    // Load FB SDK
+    const fbScriptId = "facebook-jssdk";
+    if (!document.getElementById(fbScriptId)) {
+      const script = document.createElement("script");
+      script.id = fbScriptId;
+      script.src = "https://connect.facebook.net/en_US/sdk.js";
+      script.async = true;
+      script.defer = true;
+      script.onload = () => {
+        window.FB?.init({
+          appId: process.env.NEXT_PUBLIC_FACEBOOK_APP_ID,
+          cookie: true,
+          xfbml: true,
+          version: "v18.0",
+        });
+      };
+      document.body.appendChild(script);
+    }
+  }, []);
+
+  const handleFacebookLogin = () => {
+    window.FB?.login(
+      async (response: any) => {
+        if (response.authResponse) {
+          try {
+            const { accessToken } = response.authResponse;
+            const res = await fetch("/api/auth/facebook", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ accessToken }),
+            });
+
+            const data = await res.json();
+            if (data?.token && data?.user) {
+              dispatch(login({ user: data.user.email, token: data.token }));
+              router.push("/HomePage");
+            } else {
+              console.error("Facebook login failed", data);
+            }
+          } catch (err) {
+            console.error("Facebook login error:", err);
+          }
+        }
+      },
+      { scope: "email,public_profile" }
+    );
+  };
+
+  // ✅ EMAIL/PASSWORD LOGIN (your existing code)
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
@@ -114,12 +161,7 @@ export default function LoginPage(): React.JSX.Element {
       const data = await res.json();
 
       if (data?.token && data?.user) {
-        dispatch(
-          login({
-            user: data.user.email,
-            token: data.token,
-          })
-        );
+        dispatch(login({ user: data.user.email, token: data.token }));
         router.push("/HomePage");
       } else {
         console.error("Login failed", data);
@@ -144,6 +186,7 @@ export default function LoginPage(): React.JSX.Element {
           <p className="text-gray-600 mt-2">Login to access your dashboard</p>
         </div>
 
+        {/* Email/Password form */}
         <form onSubmit={handleSubmit} className="space-y-5">
           <input
             type="email"
@@ -170,12 +213,14 @@ export default function LoginPage(): React.JSX.Element {
           </button>
         </form>
 
+        {/* Divider */}
         <div className="flex items-center gap-3">
           <hr className="flex-1 border-gray-300" />
           <span className="text-gray-500 text-sm">or</span>
           <hr className="flex-1 border-gray-300" />
         </div>
 
+        {/* Google Login */}
         <div className="flex justify-center">
           <div
             id="googleSignIn"
@@ -186,6 +231,17 @@ export default function LoginPage(): React.JSX.Element {
               Sign in with Google
             </span>
           </div>
+        </div>
+
+        {/* Facebook Login */}
+        <div className="flex justify-center mt-3">
+          <button
+            onClick={handleFacebookLogin}
+            className="flex items-center gap-2 border px-4 py-2 rounded-lg cursor-pointer bg-blue-600 text-white shadow-sm"
+          >
+            <FaFacebook size={22} />
+            <span className="text-sm font-medium">Sign in with Facebook</span>
+          </button>
         </div>
       </motion.div>
     </div>

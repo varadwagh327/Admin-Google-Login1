@@ -5,6 +5,8 @@ export interface IUser extends Document {
   email: string;
   avatar: string;
   role: string;
+  provider: string;
+  providerId: string;
 }
 
 const userSchema = new Schema<IUser>({
@@ -12,7 +14,11 @@ const userSchema = new Schema<IUser>({
   email: { type: String, required: true, unique: true },
   avatar: { type: String },
   role: { type: String, default: "User" },
-});
+  provider: String,
+  providerId: String,
+},
+ { timestamps: true }
+);
 
 const User = models.User || model<IUser>("User", userSchema);
 export default User;

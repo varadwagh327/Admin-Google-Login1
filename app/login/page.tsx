@@ -13,7 +13,7 @@ import { login } from "../redux/authSlice";
 // 🌟 Facebook SDK Response Types
 //
 interface FacebookAuthResponse {
-  accessToken: string;
+  accessToken: any;
   userID: string;
   expiresIn: number;
   signedRequest: string;
@@ -161,11 +161,19 @@ export default function LoginPage(): React.JSX.Element {
   // 🌟 CHANGED: typed response instead of `any`
   //
   const handleFacebookLogin = () => {
-    window.FB?.login(
-      async (response: FacebookLoginResponse) => {
-        if (response.authResponse) {
+  window.FB?.login(
+    function (response: FacebookLoginResponse) {
+      if (response.authResponse) {
+        (async () => {
           try {
-            const { accessToken } = response.authResponse;
+            // ✅ Fixed: safely get accessToken
+            const accessToken = response.authResponse?.accessToken;
+
+            if (!accessToken) {
+              console.error("No access token received from Facebook.");
+              return;
+            }
+
             const res = await fetch("/api/auth/facebook", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -182,11 +190,15 @@ export default function LoginPage(): React.JSX.Element {
           } catch (err) {
             console.error("Facebook login error:", err);
           }
-        }
-      },
-      { scope: "email,public_profile" }
-    );
-  };
+        })();
+      } else {
+        console.error("Facebook auth response missing:", response);
+      }
+    },
+    { scope: "email,public_profile" }
+  );
+};
+
 
   //
   // ✅ EMAIL/PASSWORD LOGIN

@@ -62,7 +62,11 @@ export async function GET(req: NextRequest) {
       });
     } else {
       // Update provider info if needed
-      const shouldUpdate: any = {};
+      const shouldUpdate: Partial<{
+  provider: string;
+  providerId: string;
+  avatar: string;
+}> = {};
       if (user.provider !== "facebook") shouldUpdate.provider = "facebook";
       if (user.providerId !== profile.id) shouldUpdate.providerId = profile.id;
       if (profile.picture?.data?.url && user.avatar !== profile.picture.data.url) shouldUpdate.avatar = profile.picture.data.url;

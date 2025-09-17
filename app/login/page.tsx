@@ -2,13 +2,33 @@
 
 import React, { useEffect, useState } from "react";
 import { FcGoogle } from "react-icons/fc";
-import { FaFacebook } from "react-icons/fa"; // ✅ Facebook icon
+import { FaFacebook } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "../redux/store";
 import { login } from "../redux/authSlice";
 
+//
+// 🌟 Facebook SDK Response Types
+//
+interface FacebookAuthResponse {
+  accessToken: string;
+  userID: string;
+  expiresIn: number;
+  signedRequest: string;
+  graphDomain: string;
+  data_access_expiration_time: number;
+}
+
+interface FacebookLoginResponse {
+  status: "connected" | "not_authorized" | "unknown";
+  authResponse?: FacebookAuthResponse;
+}
+
+//
+// 🌟 Extend global Window with proper FB typings
+//
 declare global {
   interface Window {
     google?: {
@@ -27,7 +47,19 @@ declare global {
       };
     };
     handleCredentialResponse?: (response: { credential: string }) => void;
-    FB?: any; // ✅ Add Facebook SDK global
+
+    FB?: {
+      init: (options: {
+        appId?: string;
+        cookie?: boolean;
+        xfbml?: boolean;
+        version: string;
+      }) => void;
+      login: (
+        callback: (response: FacebookLoginResponse) => void,
+        options?: { scope: string }
+      ) => void;
+    };
   }
 }
 
@@ -38,7 +70,9 @@ export default function LoginPage(): React.JSX.Element {
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
 
-  // ✅ GOOGLE LOGIN (already working)
+  //
+  // ✅ GOOGLE LOGIN
+  //
   useEffect(() => {
     window.handleCredentialResponse = async (response: { credential: string }) => {
       try {
@@ -75,10 +109,12 @@ export default function LoginPage(): React.JSX.Element {
 
     function initGSI() {
       const clientId =
-        process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ??
-        "default-google-client-id";
+        process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? "default-google-client-id";
 
-      if (window.google?.accounts?.id?.initialize && window.google?.accounts?.id?.renderButton) {
+      if (
+        window.google?.accounts?.id?.initialize &&
+        window.google?.accounts?.id?.renderButton
+      ) {
         window.google.accounts.id.initialize({
           client_id: clientId,
           callback: window.handleCredentialResponse!,
@@ -98,9 +134,10 @@ export default function LoginPage(): React.JSX.Element {
     };
   }, [router, dispatch]);
 
+  //
   // ✅ FACEBOOK LOGIN
+  //
   useEffect(() => {
-    // Load FB SDK
     const fbScriptId = "facebook-jssdk";
     if (!document.getElementById(fbScriptId)) {
       const script = document.createElement("script");
@@ -120,9 +157,12 @@ export default function LoginPage(): React.JSX.Element {
     }
   }, []);
 
+  //
+  // 🌟 CHANGED: typed response instead of `any`
+  //
   const handleFacebookLogin = () => {
     window.FB?.login(
-      async (response: any) => {
+      async (response: FacebookLoginResponse) => {
         if (response.authResponse) {
           try {
             const { accessToken } = response.authResponse;
@@ -148,7 +188,9 @@ export default function LoginPage(): React.JSX.Element {
     );
   };
 
-  // ✅ EMAIL/PASSWORD LOGIN (your existing code)
+  //
+  // ✅ EMAIL/PASSWORD LOGIN
+  //
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);

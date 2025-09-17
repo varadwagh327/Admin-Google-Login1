@@ -141,19 +141,18 @@ export default function LoginPage(): React.JSX.Element {
     const fbScriptId = "facebook-jssdk";
     if (!document.getElementById(fbScriptId)) {
       const script = document.createElement("script");
-      script.id = fbScriptId;
-      script.src = "https://connect.facebook.net/en_US/sdk.js";
-      script.async = true;
-      script.defer = true;
-      script.onload = () => {
-        window.FB?.init({
-          appId: process.env.NEXT_PUBLIC_FACEBOOK_APP_ID,
-          cookie: true,
-          xfbml: true,
-          version: "v18.0",
-        });
-      };
-      document.body.appendChild(script);
+script.src = "https://connect.facebook.net/en_US/sdk.js";
+script.async = true;
+script.defer = true;
+script.onload = () => {
+  window.FB?.init({
+    appId: process.env.NEXT_PUBLIC_FACEBOOK_APP_ID,
+    cookie: true,
+    xfbml: false,
+    version: "v23.0",
+  });
+};
+document.body.appendChild(script);
     }
   }, []);
 
@@ -181,6 +180,7 @@ export default function LoginPage(): React.JSX.Element {
             });
 
             const data = await res.json();
+            console.log(data)
             if (data?.token && data?.user) {
               dispatch(login({ user: data.user.email, token: data.token }));
               router.push("/HomePage");

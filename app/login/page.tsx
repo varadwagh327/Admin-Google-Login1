@@ -13,7 +13,7 @@ import { login } from "../redux/authSlice";
 // 🌟 Facebook SDK Response Types
 //
 interface FacebookAuthResponse {
-  accessToken: any;
+  accessToken: string;
   userID: string;
   expiresIn: number;
   signedRequest: string;

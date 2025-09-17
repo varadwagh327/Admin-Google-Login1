@@ -110,7 +110,7 @@ export default function LoginPage(): React.JSX.Element {
       script.defer = true;
       script.onload = () => {
         window.FB?.init({
-          appId: process.env.NEXT_PUBLIC_FACEBOOK_APP_ID,
+          appId: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
           cookie: true,
           xfbml: true,
           version: "v18.0",

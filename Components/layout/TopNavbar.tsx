@@ -2,33 +2,27 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { useSelector, useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
-import { logout } from "@/app/redux/authSlice";
-import { RootState, AppDispatch } from "@/app/redux/store";
+import { useAuthStore } from "@/app/zustand/store/useAuthStore"; // ✅ Zustand store
 
 interface TopbarProps {
   onMenuClick?: () => void; // callback to open sidebar
 }
 
 export default function Topbar({ onMenuClick }: TopbarProps) {
-  const auth = useSelector((state: RootState) => state.auth);
   const router = useRouter();
-  const dispatch = useDispatch<AppDispatch>();
+  const { user, logout, hydrate } = useAuthStore();
+
   const [searchTerm, setSearchTerm] = useState("");
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
-  const user = auth.user;
-  const userName = user?.name || user?.email || "Guest";
-  const userInitial = userName[0].toUpperCase();
-
-  const [useremail, setuseremail] = useState<string | null>(null);
-
+  // Load user from localStorage on first render
   useEffect(() => {
-    // This only runs in the browser
-    const stored = localStorage.getItem("user");
-    setuseremail(stored);
-  }, []);
+    hydrate(); // ✅ Zustand hydrate function to load user/token
+  }, [hydrate]);
+
+  const userName = user?.name || user?.email || "Guest";
+  const userInitial = userName[0]?.toUpperCase() || "G";
 
   const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -36,7 +30,7 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
   };
 
   const handleLogout = () => {
-    dispatch(logout());
+    logout();
     router.replace("/login");
   };
 
@@ -47,7 +41,7 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
         bg-white/95 backdrop-blur border-b border-slate-200 shadow-sm
         flex items-center justify-between
         px-4 md:px-6 py-2 md:py-3
-        w-full md:ml-64  /* 👈 shift for sidebar on desktop */
+        w-full md:ml-64
       "
     >
       {/* Left side: Sidebar toggle + Welcome */}
@@ -75,7 +69,7 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
         )}
         <div className="truncate">
           <h1 className="text-base md:text-xl font-semibold text-slate-900 truncate">
-            Welcome, {useremail} 👋
+            Welcome, {userName} 👋
           </h1>
           <p className="text-xs md:text-sm text-slate-500 truncate">
             Role: {user?.role || "Admin"}
@@ -90,7 +84,7 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
       >
         <input
           type="text"
-          placeholder={`${useremail}`}
+          placeholder={`Search...`}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="w-full rounded-l-lg border border-r-0 px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500"

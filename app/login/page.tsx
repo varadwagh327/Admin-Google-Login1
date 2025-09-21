@@ -5,9 +5,7 @@ import { FcGoogle } from "react-icons/fc";
 import { FaFacebook } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { useDispatch } from "react-redux";
-import { AppDispatch } from "../redux/store";
-import { login } from "../redux/authSlice";
+import { useAuthStore } from "@/app/zustand/store/useAuthStore"; // ✅ use Zustand store
 
 //
 // 🌟 Facebook SDK Response Types
@@ -68,10 +66,12 @@ export default function LoginPage(): React.JSX.Element {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const dispatch = useDispatch<AppDispatch>();
+
+  // ✅ Zustand store
+  const { login } = useAuthStore();
 
   //
-  // ✅ GOOGLE LOGIN
+  // GOOGLE LOGIN
   //
   useEffect(() => {
     window.handleCredentialResponse = async (response: { credential: string }) => {
@@ -84,7 +84,7 @@ export default function LoginPage(): React.JSX.Element {
 
         const data = await res.json();
         if (data?.token && data?.user) {
-          dispatch(login({ user: data.user.email, token: data.token }));
+          login(data.user, data.token); // ✅ Zustand login
           router.push("/HomePage");
         } else {
           console.error("Google login failed", data);
@@ -132,76 +132,69 @@ export default function LoginPage(): React.JSX.Element {
     return () => {
       delete window.handleCredentialResponse;
     };
-  }, [router, dispatch]);
+  }, [router, login]);
 
   //
-  // ✅ FACEBOOK LOGIN
+  // FACEBOOK LOGIN
   //
   useEffect(() => {
     const fbScriptId = "facebook-jssdk";
     if (!document.getElementById(fbScriptId)) {
       const script = document.createElement("script");
-script.src = "https://connect.facebook.net/en_US/sdk.js";
-script.async = true;
-script.defer = true;
-script.onload = () => {
-  window.FB?.init({
-    appId: process.env.NEXT_PUBLIC_FACEBOOK_APP_ID,
-    cookie: true,
-    xfbml: false,
-    version: "v23.0",
-  });
-};
-document.body.appendChild(script);
+      script.src = "https://connect.facebook.net/en_US/sdk.js";
+      script.async = true;
+      script.defer = true;
+      script.onload = () => {
+        window.FB?.init({
+          appId: process.env.NEXT_PUBLIC_FACEBOOK_APP_ID,
+          cookie: true,
+          xfbml: false,
+          version: "v23.0",
+        });
+      };
+      document.body.appendChild(script);
     }
   }, []);
 
-  //
-  // 🌟 CHANGED: typed response instead of `any`
-  //
   const handleFacebookLogin = () => {
-  window.FB?.login(
-    function (response: FacebookLoginResponse) {
-      if (response.authResponse) {
-        (async () => {
-          try {
-            // ✅ Fixed: safely get accessToken
-            const accessToken = response.authResponse?.accessToken;
+    window.FB?.login(
+      function (response: FacebookLoginResponse) {
+        if (response.authResponse) {
+          (async () => {
+            try {
+              const accessToken = response.authResponse?.accessToken;
+              if (!accessToken) {
+                console.error("No access token received from Facebook.");
+                return;
+              }
 
-            if (!accessToken) {
-              console.error("No access token received from Facebook.");
-              return;
+              const res = await fetch("/api/auth/facebook", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ accessToken }),
+              });
+
+              const data = await res.json();
+              if (data?.token && data?.user) {
+                login(data.user, data.token); // ✅ Zustand login
+                router.push("/HomePage");
+              } else {
+                console.error("Facebook login failed", data);
+              }
+            } catch (err) {
+              console.error("Facebook login error:", err);
             }
-
-            const res = await fetch("/api/auth/facebook", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ accessToken }),
-            });
-
-            const data = await res.json();
-            console.log(data)
-            if (data?.token && data?.user) {
-              dispatch(login({ user: data.user.email, token: data.token }));
-              router.push("/HomePage");
-            } else {
-              console.error("Facebook login failed", data);
-            }
-          } catch (err) {
-            console.error("Facebook login error:", err);
-          }
-        })();
-      } else {
-        console.error("Facebook auth response missing:", response);
-      }
-    },
-    { scope: "email,public_profile" }
-  );
-};
-
+          })();
+        } else {
+          console.error("Facebook auth response missing:", response);
+        }
+      },
+      { scope: "email,public_profile" }
+    );
+  };
 
   //
-  // ✅ EMAIL/PASSWORD LOGIN
+  // EMAIL/PASSWORD LOGIN
   //
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -215,7 +208,7 @@ document.body.appendChild(script);
       const data = await res.json();
 
       if (data?.token && data?.user) {
-        dispatch(login({ user: data.user.email, token: data.token }));
+        login(data.user, data.token); // ✅ Zustand login
         router.push("/HomePage");
       } else {
         console.error("Login failed", data);

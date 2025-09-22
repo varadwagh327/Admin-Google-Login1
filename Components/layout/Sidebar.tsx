@@ -20,7 +20,7 @@ export default function SideBar({
     {
       title: "Main Menu",
       items: [
-        { name: "Dashboard", href: "/dashboard", icon: "📈" },
+        { name: "Dashboard", href: "/HomePage", icon: "📈" },
         { name: "DeapSelesDashboard", icon: "📊", href: "/DeapSelesDashboard" },
       ],
     },
@@ -121,7 +121,7 @@ export default function SideBar({
             <ul className="space-y-1">
               <li>
                 <Link
-                  href="/profile"
+                  href="/Profile"
                   onClick={() => onClose()}
                   className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-indigo-500/10 hover:text-indigo-400 text-gray-300"
                   title="Profile"

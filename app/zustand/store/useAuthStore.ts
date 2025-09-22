@@ -4,6 +4,9 @@ interface User {
   name: string;
   email: string;
   role?: string;
+  avatar?: string;
+  _id?: string;
+  __v?: number;
 }
 
 interface AuthState {

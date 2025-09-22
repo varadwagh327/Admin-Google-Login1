@@ -5,7 +5,7 @@ import { FcGoogle } from "react-icons/fc";
 import { FaFacebook } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { useAuthStore } from "@/app/zustand/store/useAuthStore"; // ✅ use Zustand store
+import { useAuthStore } from "@/app/zustand/store/useAuthStore"; 
 
 //
 // 🌟 Facebook SDK Response Types
@@ -84,7 +84,7 @@ export default function LoginPage(): React.JSX.Element {
 
         const data = await res.json();
         if (data?.token && data?.user) {
-          login(data.user, data.token); // ✅ Zustand login
+          login(data.user, data.token); 
           router.push("/HomePage");
         } else {
           console.error("Google login failed", data);
@@ -176,7 +176,7 @@ export default function LoginPage(): React.JSX.Element {
 
               const data = await res.json();
               if (data?.token && data?.user) {
-                login(data.user, data.token); // ✅ Zustand login
+                login(data.user, data.token); 
                 router.push("/HomePage");
               } else {
                 console.error("Facebook login failed", data);
@@ -208,7 +208,7 @@ export default function LoginPage(): React.JSX.Element {
       const data = await res.json();
 
       if (data?.token && data?.user) {
-        login(data.user, data.token); // ✅ Zustand login
+        login(data.user, data.token); 
         router.push("/HomePage");
       } else {
         console.error("Login failed", data);

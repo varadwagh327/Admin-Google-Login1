@@ -5,6 +5,11 @@ interface User {
   email: string;
   role?: string;
   avatar?: string;
+  birthday?: string;
+  phone?: string;
+  address?: string;
+  provider?: string;
+  providerId?: string;
   _id?: string;
   __v?: number;
 }

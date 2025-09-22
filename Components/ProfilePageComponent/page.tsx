@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAuthStore } from "@/app/zustand/store/useAuthStore"; // adjust path
+import { useAuthStore } from "@/app/zustand/store/useAuthStore";
 
 // ✅ Updated User type
 interface User {
@@ -10,6 +10,11 @@ interface User {
   email: string;
   role?: string;
   avatar?: string;
+  birthday?: string;
+  phone?: string;
+  address?: string;
+  provider?: string;
+  providerId?: string;
   _id?: string;
   __v?: number;
 }
@@ -23,6 +28,11 @@ export default function ProfilePage() {
     email: "",
     role: "",
     avatar: "",
+    birthday: "",
+    phone: "",
+    address: "",
+    provider: "",
+    providerId: "",
   });
 
   // hydrate Zustand state from localStorage
@@ -100,6 +110,22 @@ export default function ProfilePage() {
             <span className="text-gray-600">Role</span>
             <span>{user.role || "User"}</span>
           </div>
+          <div className="flex justify-between">
+            <span className="text-gray-600">Birthday</span>
+            <span>{user.birthday || "-"}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-600">Phone</span>
+            <span>{user.phone || "-"}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-600">Address</span>
+            <span>{user.address || "-"}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-600">Provider</span>
+            <span>{user.provider || "local"}</span>
+          </div>
         </div>
 
         {/* Actions */}
@@ -141,6 +167,27 @@ export default function ProfilePage() {
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
                 className="w-full border rounded-md p-2"
                 placeholder="Email"
+              />
+              <input
+                type="date"
+                value={form.birthday || ""}
+                onChange={(e) => setForm({ ...form, birthday: e.target.value })}
+                className="w-full border rounded-md p-2"
+                placeholder="Birthday"
+              />
+              <input
+                type="tel"
+                value={form.phone || ""}
+                onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                className="w-full border rounded-md p-2"
+                placeholder="Phone Number"
+              />
+              <input
+                type="text"
+                value={form.address || ""}
+                onChange={(e) => setForm({ ...form, address: e.target.value })}
+                className="w-full border rounded-md p-2"
+                placeholder="Address"
               />
             </div>
             <div className="mt-4 flex gap-2 justify-end">

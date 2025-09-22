@@ -5,11 +5,8 @@ import { FcGoogle } from "react-icons/fc";
 import { FaFacebook } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { useAuthStore } from "@/app/zustand/store/useAuthStore"; 
+import { useAuthStore } from "@/app/zustand/store/useAuthStore";
 
-//
-// 🌟 Facebook SDK Response Types
-//
 interface FacebookAuthResponse {
   accessToken: string;
   userID: string;
@@ -24,9 +21,6 @@ interface FacebookLoginResponse {
   authResponse?: FacebookAuthResponse;
 }
 
-//
-// 🌟 Extend global Window with proper FB typings
-//
 declare global {
   interface Window {
     google?: {
@@ -66,13 +60,9 @@ export default function LoginPage(): React.JSX.Element {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-
-  // ✅ Zustand store
   const { login } = useAuthStore();
 
-  //
   // GOOGLE LOGIN
-  //
   useEffect(() => {
     window.handleCredentialResponse = async (response: { credential: string }) => {
       try {
@@ -84,7 +74,19 @@ export default function LoginPage(): React.JSX.Element {
 
         const data = await res.json();
         if (data?.token && data?.user) {
-          login(data.user, data.token); 
+          // Ensure all fields are stored
+          login({
+            name: data.user.name,
+            email: data.user.email,
+            avatar: data.user.avatar,
+            role: data.user.role,
+            birthday: data.user.birthday,
+            phone: data.user.phone,
+            address: data.user.address,
+            provider: "google",
+            providerId: data.user._id,
+          }, data.token);
+
           router.push("/HomePage");
         } else {
           console.error("Google login failed", data);
@@ -108,13 +110,9 @@ export default function LoginPage(): React.JSX.Element {
     }
 
     function initGSI() {
-      const clientId =
-        process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? "default-google-client-id";
+      const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? "default-google-client-id";
 
-      if (
-        window.google?.accounts?.id?.initialize &&
-        window.google?.accounts?.id?.renderButton
-      ) {
+      if (window.google?.accounts?.id?.initialize && window.google?.accounts?.id?.renderButton) {
         window.google.accounts.id.initialize({
           client_id: clientId,
           callback: window.handleCredentialResponse!,
@@ -134,9 +132,7 @@ export default function LoginPage(): React.JSX.Element {
     };
   }, [router, login]);
 
-  //
   // FACEBOOK LOGIN
-  //
   useEffect(() => {
     const fbScriptId = "facebook-jssdk";
     if (!document.getElementById(fbScriptId)) {
@@ -157,45 +153,42 @@ export default function LoginPage(): React.JSX.Element {
   }, []);
 
   const handleFacebookLogin = () => {
-    window.FB?.login(
-      function (response: FacebookLoginResponse) {
-        if (response.authResponse) {
-          (async () => {
-            try {
-              const accessToken = response.authResponse?.accessToken;
-              if (!accessToken) {
-                console.error("No access token received from Facebook.");
-                return;
-              }
+    window.FB?.login(async (response: FacebookLoginResponse) => {
+      if (response.authResponse) {
+        try {
+          const accessToken = response.authResponse.accessToken;
+          const res = await fetch("/api/auth/facebook", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ accessToken }),
+          });
 
-              const res = await fetch("/api/auth/facebook", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ accessToken }),
-              });
+          const data = await res.json();
+          if (data?.token && data?.user) {
+            login({
+              name: data.user.name,
+              email: data.user.email,
+              avatar: data.user.avatar,
+              role: data.user.role,
+              birthday: data.user.birthday,
+              phone: data.user.phone,
+              address: data.user.address,
+              provider: "facebook",
+              providerId: data.user._id,
+            }, data.token);
 
-              const data = await res.json();
-              if (data?.token && data?.user) {
-                login(data.user, data.token); 
-                router.push("/HomePage");
-              } else {
-                console.error("Facebook login failed", data);
-              }
-            } catch (err) {
-              console.error("Facebook login error:", err);
-            }
-          })();
-        } else {
-          console.error("Facebook auth response missing:", response);
+            router.push("/HomePage");
+          } else {
+            console.error("Facebook login failed", data);
+          }
+        } catch (err) {
+          console.error("Facebook login error:", err);
         }
-      },
-      { scope: "email,public_profile" }
-    );
+      }
+    }, { scope: "email,public_profile" });
   };
 
-  //
   // EMAIL/PASSWORD LOGIN
-  //
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
@@ -208,7 +201,18 @@ export default function LoginPage(): React.JSX.Element {
       const data = await res.json();
 
       if (data?.token && data?.user) {
-        login(data.user, data.token); 
+        login({
+          name: data.user.name,
+          email: data.user.email,
+          avatar: data.user.avatar,
+          role: data.user.role,
+          birthday: data.user.birthday,
+          phone: data.user.phone,
+          address: data.user.address,
+          provider: "local",
+          providerId: data.user._id,
+        }, data.token);
+
         router.push("/HomePage");
       } else {
         console.error("Login failed", data);

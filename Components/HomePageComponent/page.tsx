@@ -4,9 +4,7 @@ import React, { useMemo } from "react";
 import { motion } from "framer-motion";
 import { HiOutlineUsers, HiOutlineChartBar, HiOutlineShoppingCart } from "react-icons/hi";
 
-/* -------------------------
-   Mock Data
-------------------------- */
+
 const METRICS = [
   { id: "users", title: "Active Users", value: "12.4k", delta: "+4.2%", icon: HiOutlineUsers },
   { id: "revenue", title: "Monthly Revenue", value: "$48.2k", delta: "+6.8%", icon: HiOutlineChartBar },
